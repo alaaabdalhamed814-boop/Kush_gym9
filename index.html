@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>نظام إدارة أعضاء الجيم</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background: linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)),
+    url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd') center/cover;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:white;
+}
+
+.box{
+    background:rgba(255,255,255,0.1);
+    padding:20px;
+    width:340px;
+    border-radius:15px;
+    backdrop-filter: blur(10px);
+    text-align:center;
+}
+
+input,button{
+    width:90%;
+    padding:10px;
+    margin:8px 0;
+    border:none;
+    border-radius:8px;
+}
+
+button{
+    background:#ff4a57;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{background:#ff1f2e}
+
+.hidden{display:none}
+
+.small{
+    font-size:13px;
+    text-align:right;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<!-- LOGIN -->
+<div id="login">
+    <h3>تسجيل دخول عضو</h3>
+    <input id="name" placeholder="اسم العضو">
+    <input id="code" placeholder="الكود">
+    <button onclick="login()">دخول</button>
+
+    <hr>
+
+    <h4>دخول الأدمن</h4>
+    <input id="adminPass" placeholder="كلمة مرور الأدمن">
+    <button onclick="adminLogin()">دخول أدمن</button>
+</div>
+
+<!-- MEMBER PAGE -->
+<div id="member" class="hidden">
+    <h3>أهلاً 👋 <span id="user"></span></h3>
+    <button onclick="checkIn()">تسجيل حضور</button>
+    <button onclick="logout()">خروج</button>
+
+    <div id="logs" class="small"></div>
+</div>
+
+<!-- ADMIN PAGE -->
+<div id="admin" class="hidden">
+    <h3>لوحة الأدمن</h3>
+
+    <input id="newName" placeholder="اسم عضو جديد">
+    <input id="newCode" placeholder="كود العضو">
+    <button onclick="addMember()">إضافة عضو</button>
+
+    <h4>الأعضاء</h4>
+    <div id="membersList" class="small"></div>
+
+    <button onclick="logout()">خروج</button>
+</div>
+
+</div>
+
+<script>
+
+// بيانات الأعضاء
+let members = JSON.parse(localStorage.getItem("members") || "[]");
+
+// ===== تسجيل عضو =====
+function login(){
+    let name = document.getElementById("name").value;
+    let code = document.getElementById("code").value;
+
+    let user = members.find(m => m.name === name && m.code === code);
+
+    if(!user){
+        alert("بيانات غلط ❌");
+        return;
+    }
+
+    localStorage.setItem("currentUser", name);
+
+    showMember();
+}
+
+// ===== أدمن =====
+function adminLogin(){
+    let pass = document.getElementById("adminPass").value;
+
+    if(pass !== "admin123"){
+        alert("كلمة مرور غلط ❌");
+        return;
+    }
+
+    showAdmin();
+}
+
+// ===== إضافة عضو =====
+function addMember(){
+    let name = document.getElementById("newName").value;
+    let code = document.getElementById("newCode").value;
+
+    members.push({name, code});
+    localStorage.setItem("members", JSON.stringify(members));
+
+    loadMembers();
+}
+
+// ===== تحميل الأعضاء =====
+function loadMembers(){
+    document.getElementById("membersList").innerHTML =
+    members.map(m => "👤 " + m.name + " | " + m.code).join("<br>");
+}
+
+// ===== حضور =====
+function checkIn(){
+    let user = localStorage.getItem("currentUser");
+    let logs = JSON.parse(localStorage.getItem(user+"_logs") || "[]");
+
+    logs.push(new Date().toLocaleString());
+    localStorage.setItem(user+"_logs", JSON.stringify(logs));
+
+    showLogs();
+}
+
+// ===== عرض حضور =====
+function showLogs(){
+    let user = localStorage.getItem("currentUser");
+    let logs = JSON.parse(localStorage.getItem(user+"_logs") || "[]");
+
+    document.getElementById("logs").innerHTML =
+    "<h4>سجل الحضور:</h4>" +
+    logs.map(l => "✔ " + l).join("<br>");
+}
+
+// ===== عرض صفحات =====
+function showMember(){
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("member").classList.remove("hidden");
+    document.getElementById("user").innerText = localStorage.getItem("currentUser");
+    showLogs();
+}
+
+function showAdmin(){
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("admin").classList.remove("hidden");
+    loadMembers();
+}
+
+// ===== خروج =====
+function logout(){
+    localStorage.removeItem("currentUser");
+    location.reload();
+}
+
+</script>
+
+</body>
+</html>
